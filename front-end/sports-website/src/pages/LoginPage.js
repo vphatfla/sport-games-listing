@@ -1,24 +1,34 @@
 // src/pages/LoginPage.js
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Container, Link } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true); // true for login, false for sign-up
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const navigate = useNavigate(); // Initialize navigate function
 
   const handleLogin = () => {
-    // Handle login logic here
+    // Here you would typically handle login logic,
+    // such as authenticating with a backend API
     console.log('Login - Email:', email);
     console.log('Password:', password);
+    
+    // After successful login, navigate to main page
+    navigate('/');
   };
 
   const handleSignUp = () => {
-    // Handle sign-up logic here
+    // Here you would typically handle sign-up logic
     console.log('Sign Up - Email:', email);
     console.log('Password:', password);
     console.log('Confirm Password:', confirmPassword);
+
+    // After successful sign-up, navigate to main page
+    navigate('/');
   };
 
   const toggleForm = () => {

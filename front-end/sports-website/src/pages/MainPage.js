@@ -8,7 +8,7 @@ import ProfileIcon from '../components/ProfileIcon';
 function MainPage() {
   return (
     <div>
-    <p><Link to="/login">Login</Link></p>
+    <p><Link to="/login">Log Out</Link></p>
       <ProfileIcon />
       <SportsList />
       <MatchList />
