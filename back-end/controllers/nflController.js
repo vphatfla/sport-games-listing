@@ -1,7 +1,7 @@
 const getNFLData = async (req, res) => {
-    const { date } = req.body
+    const dates = req.query.dates
 
-    var param = (date === null || date === '') ? '' : '?' + date
+    var param = (dates === null || dates === '' || dates == undefined) ? '' : '?dates=' + dates
 
     try {
         const data = await (await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard" + param)).json()

@@ -1,0 +1,27 @@
+id = id
+name = name
+shortName = shortName
+week = week.number
+teams = []
+e.g teams[0] = {
+    homeAway = competitions[0].competitors[0].homeAway
+    name = competitions[0].competitors[0].team.name
+    abbreviation =  competitions[0].competitors[0].team.abbreviation
+    displayName = ...
+    shortDisplayName = ...
+    color = ...
+    alternateColor = ...
+    logo = ...logo
+    score = ...score
+
+}
+
+status {
+    clock
+    displayClock
+    period
+    type: e.g STATUS_SCHEDULED
+    description
+    detail
+    shortDetail
+}
