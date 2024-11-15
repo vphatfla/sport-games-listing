@@ -15,11 +15,9 @@ const getNFLData = async (req, res) => {
 }
 
 const processData = (events) => {
-    var res = []
-    for (var e of events) {
-        var teams = []
-        for (var team of e['competitions'][0]['competitors']) {
-            teams.push({
+    return events.map((e) => {
+        var teams = e['competitions'][0]['competitors'].map((team) => {
+            return {
                 'homeAway': team['homeAway'],
                 'name': team['team']['name'],
                 'abbreviation': team['team']['abbreviation'],
@@ -29,10 +27,9 @@ const processData = (events) => {
                 'alternateColor': team['team']['alternateColor'],
                 'logo': team['team']['logo'],
                 'score': team['team']['score']
-            })
-        }
-
-        res.push({
+            }
+        })
+        return {
             'id': e['id'],
             'name': e['name'],
             'shortName': e['shortName'],
@@ -47,8 +44,7 @@ const processData = (events) => {
                 'shortDetail': e['status']['type']['shortDetail']
             },
             'teams': teams
-        })
-    }
-    return res
+        }
+    });
 }
 module.exports = { getNFLData }
