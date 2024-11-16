@@ -1,39 +1,83 @@
-// src/pages/LoginPage.js
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Container, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const navigate = useNavigate(); // Initialize navigation
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        navigate('/');
+      } else {
+        alert(data.message || 'Login failed! Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('Something went wrong. Please try again.');
+    }
+  };
+
+  const handleSignUp = async () => {
+    // Ensure passwords match
+    if (password !== confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
   
-  const navigate = useNavigate(); // Initialize navigate function
-
-  const handleLogin = () => {
-    // Here you would typically handle login logic,
-    // such as authenticating with a backend API
-    console.log('Login - Email:', email);
-    console.log('Password:', password);
-    
-    // After successful login, navigate to main page
-    navigate('/');
+    // Optional: Add input validation here (e.g., minimum password length)
+  
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          name: username, // Replace with a separate name field if applicable
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        // Alert the user and navigate to the main page
+        alert('Registration successful!');
+        navigate('/'); // Redirect to the main page or login page
+      } else {
+        alert(data.message || 'Sign-up failed!');
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
+      alert('Something went wrong. Please try again.');
+    }
   };
-
-  const handleSignUp = () => {
-    // Here you would typically handle sign-up logic
-    console.log('Sign Up - Email:', email);
-    console.log('Password:', password);
-    console.log('Confirm Password:', confirmPassword);
-
-    // After successful sign-up, navigate to main page
-    navigate('/');
-  };
+  
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
-    setEmail('');
+    setUsername('');
     setPassword('');
     setConfirmPassword('');
   };
@@ -54,14 +98,14 @@ function LoginPage() {
         </Typography>
 
         <TextField
-          label="Email"
+          label="Username"
           variant="outlined"
           fullWidth
           margin="normal"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
-        
+
         <TextField
           label="Password"
           type="password"
