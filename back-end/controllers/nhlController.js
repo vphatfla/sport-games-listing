@@ -1,10 +1,10 @@
-const getNBAData = async (req, res) => {
+const getNHLData = async (req, res) => {
     const dates = req.query.dates
 
     var param = (dates === null || dates === '' || dates == undefined) ? '' : '?dates=' + dates
 
     try {
-        const data = await (await fetch("http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard" + param)).json()
+        const data = await (await fetch("http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard" + param)).json()
         const events = data['events']
         res.status(200).json(processData(events))
     } catch (err) {
@@ -46,4 +46,4 @@ const processData = (events) => {
         }
     });
 }
-module.exports = { getNBAData }
+module.exports = { getNHLData }

@@ -33,7 +33,6 @@ const processData = (events) => {
             'id': e['id'],
             'name': e['name'],
             'shortName': e['shortName'],
-            'week': e['week']['number'],
             'status': {
                 'clock': e['status']['clock'],
                 'displayClock': e['status']['displayClock'],

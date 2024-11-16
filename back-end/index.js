@@ -16,7 +16,10 @@ app.use('/api/auth', authRoutes);
 
 // protected route
 app.use('/api/games', authMiddleware, gameRoutes)
-app
+
+//test route
+app.use('/api', gameRoutes)
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
