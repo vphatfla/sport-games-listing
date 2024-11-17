@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
-  favoriteSport: { type: String, required: false },
-  favoriteTeam: { type: String, required: false },
+  favoriteSport: { type: [String], required: false },
+  favoriteTeam: { type: [String], required: false },
 });
 
 userSchema.pre('save', async function (next) {

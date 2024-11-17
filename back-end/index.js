@@ -4,6 +4,7 @@ const connectDB = require('./config/db');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const gameRoutes = require('./routes/gameRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 const authMiddleware = require('./middlewares/authMiddleware')
 
 dotenv.config();
@@ -16,7 +17,8 @@ app.use('/api/auth', authRoutes);
 
 // protected route
 app.use('/api/games', authMiddleware, gameRoutes)
-app
+app.use('/api/profile', authMiddleware, profileRoutes)
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
