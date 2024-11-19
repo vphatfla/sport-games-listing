@@ -27,7 +27,8 @@ function LoginPage() {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        navigate('/');
+        localStorage.setItem('username',username);
+        navigate('/home');
       } else {
         alert(data.message || 'Login failed! Please check your credentials.');
       }
@@ -64,7 +65,7 @@ function LoginPage() {
       if (response.ok) {
         // Alert the user and navigate to the main page
         alert('Registration successful!');
-        navigate('/'); // Redirect to the main page or login page
+        navigate('/login'); // Redirect to the main page or login page
       } else {
         alert(data.message || 'Sign-up failed!');
       }
