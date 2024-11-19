@@ -13,7 +13,7 @@ import {
 
 function MainPage() {
   const navigate = useNavigate();
-  const [games, setGames] = useState([]); // State to store game data
+  const [games, setGames] = useState([]); // State to store game data for all sports
   const [error, setError] = useState(''); // State to handle errors
   const [username, setUsername] = useState(''); // State to store username
 
@@ -33,7 +33,7 @@ function MainPage() {
         Authorization: `Bearer ${token}`, // Include token
       },
       body: JSON.stringify({
-        "username": localStorage.getItem("username")
+        username: localStorage.getItem('username'), // Assuming the username is stored
       }),
     })
       .then((response) => {
@@ -54,25 +54,42 @@ function MainPage() {
         setError('Could not fetch user profile');
       });
 
-    // Fetch NFL games data
-    fetch('/api/games/nfl-games', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch game data');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setGames(data); // Set the game data
-      })
-      .catch((err) => {
-        setError(err.message);
-      });
+    // Fetch all sports data sequentially
+    const fetchAllSportsData = async () => {
+      try {
+        const endpoints = [
+          '/api/games/nfl-games',
+          '/api/games/nba-games',
+          '/api/games/nlb-games',
+          '/api/games/nhl-games',
+          '/api/games/soc-games',
+        ];
+        const results = await Promise.all(
+          endpoints.map((endpoint) =>
+            fetch(endpoint, {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }).then((response) => {
+              if (!response.ok) {
+                throw new Error(`Failed to fetch data from ${endpoint}`);
+              }
+              return response.json();
+            })
+          )
+        );
+
+        // Combine all the games into one array
+        const combinedGames = results.flat();
+        setGames(combinedGames); // Set the game data for all sports
+      } catch (err) {
+        console.error(err.message);
+        setError('Failed to fetch game data for all sports');
+      }
+    };
+
+    fetchAllSportsData();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -101,38 +118,52 @@ function MainPage() {
         </Toolbar>
       </AppBar>
 
-      {/* Display NFL Games */}
+      {/* Display Games for All Sports */}
       <Box p={3}>
         <Typography variant="h5" gutterBottom>
-          Saturday 23 November 2024
+          Upcoming Games
         </Typography>
         <Grid container spacing={2}>
-          {games.map((game) => (
-            <Grid item xs={12} key={game.id}>
-              <Paper elevation={3} style={{ padding: '10px', display: 'flex', alignItems: 'center' }}>
+          {games.map((game, index) => (
+            <Grid item xs={12} key={index}>
+              <Paper
+                elevation={3}
+                style={{
+                  padding: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
                 {/* Home Team */}
                 <Box display="flex" alignItems="center" flex={1}>
                   <Avatar
-                    src={game.teams[0].logo}
-                    alt={game.teams[0].name}
+                    src={game.teams[0]?.logo}
+                    alt={game.teams[0]?.name}
                     style={{ marginRight: '10px', width: '40px', height: '40px' }}
                   />
-                  <Typography variant="h6">{game.teams[0].displayName}</Typography>
+                  <Typography variant="h6">
+                    {game.teams[0]?.displayName}
+                  </Typography>
                 </Box>
 
                 {/* Match Time */}
                 <Box textAlign="center" flex={1}>
-                  <Typography variant="h6">{game.status.shortDetail}</Typography>
+                  <Typography variant="h6">{game.status?.shortDetail}</Typography>
                 </Box>
 
                 {/* Away Team */}
-                <Box display="flex" alignItems="center" flex={1} justifyContent="flex-end">
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  flex={1}
+                  justifyContent="flex-end"
+                >
                   <Typography variant="h6" style={{ marginRight: '10px' }}>
-                    {game.teams[1].displayName}
+                    {game.teams[1]?.displayName}
                   </Typography>
                   <Avatar
-                    src={game.teams[1].logo}
-                    alt={game.teams[1].name}
+                    src={game.teams[1]?.logo}
+                    alt={game.teams[1]?.name}
                     style={{ marginLeft: '10px', width: '40px', height: '40px' }}
                   />
                 </Box>
