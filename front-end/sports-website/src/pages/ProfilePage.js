@@ -89,7 +89,7 @@ function ProfilePage() {
       navigate("/login");
       return;
     }
-
+  
     fetch("/api/profile/setting", {
       method: "POST",
       headers: {
@@ -112,7 +112,10 @@ function ProfilePage() {
         setSnackbarMessage("Profile updated successfully!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
-
+  
+        // Update the localStorage with the new name
+        localStorage.setItem("username", name);
+  
         // Save favorite sports to local storage
         localStorage.setItem("favoriteSports", JSON.stringify(favoriteSports));
       })
@@ -123,6 +126,7 @@ function ProfilePage() {
         console.error(err.message);
       });
   };
+  
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
