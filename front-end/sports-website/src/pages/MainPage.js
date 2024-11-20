@@ -1,54 +1,116 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  CardMedia,
   Grid,
+  Avatar,
+  Paper,
   AppBar,
   Toolbar,
   Button,
-} from '@mui/material';
+  Menu,
+  MenuItem,
+} from "@mui/material";
 
 function MainPage() {
   const navigate = useNavigate();
-  const [games, setGames] = useState([]); // State to store game data
-  const [error, setError] = useState(''); // State to handle errors
+  const [games, setGames] = useState([]); // State to store game data for all sports
+  const [filteredGames, setFilteredGames] = useState([]); // State to store filtered games
+  const [error, setError] = useState(""); // State to handle errors
+  const [username, setUsername] = useState(""); // State to store username
+  const [favoriteSports, setFavoriteSports] = useState([]); // State for favorite sports
+  const [anchorEl, setAnchorEl] = useState(null); // State for dropdown menu
 
   useEffect(() => {
-    // Check if the user is logged in (token exists in localStorage)
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
+    const savedName = localStorage.getItem("username");
+    const savedFavoriteSports = JSON.parse(localStorage.getItem("favoriteSports")) || [];
+    if (savedName) setUsername(savedName);
+    setFavoriteSports(savedFavoriteSports);
+
     if (!token) {
-      alert('You need to log in first!');
-      navigate('/login'); // Redirect to login if not logged in
-    } else {
-      // Fetch NFL games data
-      fetch('/api/games/nfl-games', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
-        },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Failed to fetch data');
-          }
-          return response.json();
-        })
-        .then((data) => {
-          setGames(data); // Set the game data
-        })
-        .catch((err) => {
-          setError(err.message);
-        });
+      alert("You need to log in first!");
+      navigate("/login");
+      return;
     }
+
+    // Fetch all sports data sequentially
+    const fetchAllSportsData = async () => {
+      try {
+        const endpoints = [
+          { url: "/api/games/nfl-games", sport: "NFL" },
+          { url: "/api/games/nba-games", sport: "NBA" },
+          { url: "/api/games/nlb-games", sport: "MLB" },
+          { url: "/api/games/nhl-games", sport: "NHL" },
+          { url: "/api/games/soc-games", sport: "Soccer" },
+        ];
+        const results = await Promise.all(
+          endpoints.map((endpoint) =>
+            fetch(endpoint.url, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }).then((response) => {
+              if (!response.ok) {
+                throw new Error(`Failed to fetch data from ${endpoint.url}`);
+              }
+              return response.json().then((data) => ({
+                sport: endpoint.sport,
+                games: data,
+              }));
+            })
+          )
+        );
+
+        // Combine all the games into one array with sport labels
+        const combinedGames = results.flatMap(({ sport, games }) =>
+          games.map((game) => ({ ...game, sport }))
+        );
+
+        // Sort games based on favorite sports
+        const sortedGames = sortGamesByFavoriteSports(combinedGames, savedFavoriteSports);
+
+        setGames(sortedGames);
+        setFilteredGames(sortedGames);
+      } catch (err) {
+        console.error(err.message);
+        setError("Failed to fetch game data for all sports");
+      }
+    };
+
+    fetchAllSportsData();
   }, [navigate]);
 
+  // Function to sort games by favorite sports
+  const sortGamesByFavoriteSports = (games, favoriteSports) => {
+    return games.sort((a, b) => {
+      const aIsFavorite = favoriteSports.includes(a.sport);
+      const bIsFavorite = favoriteSports.includes(b.sport);
+
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      return 0; // Keep the relative order of non-favorite games
+    });
+  };
+
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = (sport) => {
+    setAnchorEl(null);
+    if (sport === "All") {
+      setFilteredGames(games); // Show all games
+    } else {
+      setFilteredGames(games.filter((game) => game.sport === sport)); // Filter by selected sport
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Clear the token from localStorage
-    navigate('/login'); // Redirect to the login page
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   if (error) {
@@ -58,12 +120,27 @@ function MainPage() {
   return (
     <Box>
       {/* Navigation Bar */}
-      <AppBar position="static" style={{ marginBottom: '20px' }}>
+      <AppBar position="static" style={{ marginBottom: "20px" }}>
         <Toolbar>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            NFL Games
+            {username ? `Hello, ${username}` : "Loading..."}
           </Typography>
-          <Button color="inherit" onClick={() => navigate('/profile')}>
+          <Button color="inherit" onClick={handleMenuClick}>
+            Filter Games
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={() => handleMenuClose("All")}
+          >
+            <MenuItem onClick={() => handleMenuClose("All")}>All Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose("NFL")}>NFL Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose("NBA")}>NBA Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose("MLB")}>MLB Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose("NHL")}>NHL Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose("Soccer")}>Soccer Games</MenuItem>
+          </Menu>
+          <Button color="inherit" onClick={() => navigate("/profile")}>
             Profile
           </Button>
           <Button color="inherit" onClick={handleLogout}>
@@ -72,34 +149,50 @@ function MainPage() {
         </Toolbar>
       </AppBar>
 
-      {/* Display NFL Games */}
+      {/* Display Games for Selected Sport */}
       <Box p={3}>
-        <Typography variant="h4" gutterBottom>
-          NFL Games - Week 11
+        <Typography variant="h5" gutterBottom>
+          {filteredGames.length > 0 ? `Upcoming Games` : "No Games Available"}
         </Typography>
-        <Grid container spacing={3}>
-          {games.map((game) => (
-            <Grid item xs={12} sm={6} md={4} key={game.id}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image={game.teams[0].logo} // Use home team logo
-                  alt={game.teams[0].name}
-                />
-                <CardContent>
-                  <Typography variant="h6">{game.name}</Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {game.status.description}
+        <Grid container spacing={2}>
+          {filteredGames.map((game, index) => (
+            <Grid item xs={12} key={index}>
+              <Paper
+                elevation={3}
+                style={{
+                  padding: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* Home Team */}
+                <Box display="flex" alignItems="center" flex={1}>
+                  <Avatar
+                    src={game.teams[0]?.logo}
+                    alt={game.teams[0]?.name}
+                    style={{ marginRight: "10px", width: "40px", height: "40px" }}
+                  />
+                  <Typography variant="h6">{game.teams[0]?.displayName}</Typography>
+                </Box>
+
+                {/* Match Time */}
+                <Box textAlign="center" flex={1}>
+                  <Typography variant="h6">{game.status?.shortDetail || "Time TBD"}</Typography>
+                </Box>
+
+                {/* Away Team */}
+                <Box display="flex" alignItems="center" flex={1} justifyContent="flex-end">
+                  <Typography variant="h6" style={{ marginRight: "10px" }}>
+                    {game.teams[1]?.displayName}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {game.status.detail}
-                  </Typography>
-                  <Typography variant="body2">
-                    Home: {game.teams[0].displayName} vs. Away: {game.teams[1].displayName}
-                  </Typography>
-                </CardContent>
-              </Card>
+                  <Avatar
+                    src={game.teams[1]?.logo}
+                    alt={game.teams[1]?.name}
+                    style={{ width: "40px", height: "40px" }}
+                  />
+                </Box>
+              </Paper>
             </Grid>
           ))}
         </Grid>

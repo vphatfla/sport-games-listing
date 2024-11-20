@@ -1,113 +1,207 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Select, MenuItem, Box, IconButton, Typography, Button, Alert } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
-import HomeIcon from '@mui/icons-material/Home';
-import { useNavigate } from 'react-router-dom';
-
-const teams = ['Team A', 'Team B', 'Team C', 'Team D'];
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  AppBar,
+  Toolbar,
+  Select,
+  MenuItem,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [favoriteSports, setFavoriteSports] = useState([]);
+  const [error, setError] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // State for user profile
-  const [name, setName] = useState('');
-  const [favorites, setFavorites] = useState([]);
-  const [successMessage, setSuccessMessage] = useState(''); // Success message state
+  const sportsOptions = ["NFL", "NBA", "MLB", "NHL", "Soccer"];
 
-  // Load profile data from localStorage on component mount
-  useEffect(() => {
-    const savedName = localStorage.getItem('name');
-    const savedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    if (savedName) setName(savedName);
-    setFavorites(savedFavorites);
-  }, []);
+  // Fetch user profile data
+  const fetchProfile = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setSnackbarMessage("You need to log in first!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      navigate("/login");
+      return;
+    }
 
-  // Handle favorite teams selection
-  const handleFavoritesChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setFavorites(typeof value === 'string' ? value.split(',') : value);
+    fetch("/api/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        username: localStorage.getItem("username"),
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setName(data.name);
+        const serverSports = data.favoriteSports || [];
+        setFavoriteSports(serverSports);
+
+        // Save to local storage for persistence
+        localStorage.setItem("favoriteSports", JSON.stringify(serverSports));
+      })
+      .catch((err) => {
+        // If there is an error, fallback to localStorage
+        const storedSports = JSON.parse(localStorage.getItem("favoriteSports"));
+        if (storedSports) {
+          setFavoriteSports(storedSports);
+        }
+        setError(err.message);
+        console.error(err.message);
+      });
   };
 
-  // Save changes locally
+  // Run fetchProfile on mount
+  useEffect(() => {
+    const storedSports = JSON.parse(localStorage.getItem("favoriteSports"));
+    if (storedSports) {
+      setFavoriteSports(storedSports);
+    }
+    fetchProfile();
+  }, [navigate]);
+
+  // Save profile changes
   const handleSaveChanges = () => {
-    localStorage.setItem('name', name);
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-    setSuccessMessage('Changes saved successfully!'); // Set success message
-    setTimeout(() => setSuccessMessage(''), 3000); // Clear the message after 3 seconds
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setSnackbarMessage("You need to log in first!");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      navigate("/login");
+      return;
+    }
+  
+    fetch("/api/profile/setting", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        username: localStorage.getItem("username"),
+        name,
+        favoriteSports,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to save profile data");
+        }
+        return res.json();
+      })
+      .then(() => {
+        setSnackbarMessage("Profile updated successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+  
+        // Update the localStorage with the new name
+        localStorage.setItem("username", name);
+  
+        // Save favorite sports to local storage
+        localStorage.setItem("favoriteSports", JSON.stringify(favoriteSports));
+      })
+      .catch((err) => {
+        setSnackbarMessage("Error saving profile: " + err.message);
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        console.error(err.message);
+      });
+  };
+  
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   const handleLogout = () => {
-    navigate('/login'); // Redirect to login page
-  };
-
-  const handleHome = () => {
-    navigate('/'); // Navigate to the main page
+    localStorage.removeItem("token");
+    localStorage.removeItem("favoriteSports"); // Clear local storage on logout
+    navigate("/login");
   };
 
   return (
-    <Box p={3}>
-      {/* Home and Logout buttons */}
-      <Box display="flex" justifyContent="space-between" mb={2}>
-        <IconButton onClick={handleHome} color="primary">
-          <HomeIcon />
-        </IconButton>
-        <IconButton onClick={handleLogout} color="primary">
-          <LogoutIcon />
-        </IconButton>
-      </Box>
+    <Box>
+      <AppBar position="static" style={{ marginBottom: "20px" }}>
+        <Toolbar>
+          <Typography variant="h6" style={{ flexGrow: 1 }}>
+            Profile Page
+          </Typography>
+          <Button color="inherit" onClick={() => navigate("/home")}>
+            Home
+          </Button>
+          <Button color="inherit" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-      <Typography variant="h4" gutterBottom>
-        Your Account
-      </Typography>
-
-      {/* Display Success Message */}
-      {successMessage && (
-        <Alert severity="success" style={{ marginBottom: '20px' }}>
-          {successMessage}
-        </Alert>
-      )}
-
-      {/* Name Field */}
-      <TextField
-        label="Name"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-
-      {/* Favorite Teams */}
-      <Typography variant="h5" gutterBottom>
-        My Favorite Teams
-      </Typography>
-      <Select
-        multiple
-        value={favorites}
-        onChange={handleFavoritesChange}
-        fullWidth
-        renderValue={(selected) => selected.join(', ')}
-      >
-        {teams.map((team) => (
-          <MenuItem key={team} value={team}>
-            {team}
-          </MenuItem>
-        ))}
-      </Select>
-
-      {/* Save Changes Button */}
-      <Box mt={3}>
+      <Box p={3}>
+        <Typography variant="h4" gutterBottom>
+          Edit Your Profile
+        </Typography>
+        {error && <Typography color="error">{error}</Typography>}
+        <TextField
+          label="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+        <Typography variant="h6" style={{ marginTop: "20px" }}>
+          Favorite Sports
+        </Typography>
+        <Select
+          multiple
+          value={favoriteSports}
+          onChange={(e) => setFavoriteSports(e.target.value)}
+          fullWidth
+        >
+          {sportsOptions.map((sport) => (
+            <MenuItem key={sport} value={sport}>
+              {sport}
+            </MenuItem>
+          ))}
+        </Select>
         <Button
           variant="contained"
           color="primary"
-          fullWidth
           onClick={handleSaveChanges}
+          style={{ marginTop: "20px" }}
         >
           Save Changes
         </Button>
       </Box>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
