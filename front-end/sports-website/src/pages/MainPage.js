@@ -9,31 +9,38 @@ import {
   AppBar,
   Toolbar,
   Button,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 
 function MainPage() {
   const navigate = useNavigate();
   const [games, setGames] = useState([]); // State to store game data for all sports
+  const [filteredGames, setFilteredGames] = useState([]); // State to store filtered games
   const [error, setError] = useState(''); // State to handle errors
   const [username, setUsername] = useState(''); // State to store username
+  const [anchorEl, setAnchorEl] = useState(null); // State for dropdown menu
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const savedName = localStorage.getItem('username'); // Fetch the updated name
+    if (savedName) setUsername(savedName); // Update username dynamically
+  
     if (!token) {
       alert('You need to log in first!');
-      navigate('/login'); // Redirect to login if not logged in
+      navigate('/login');
       return;
     }
 
     // Fetch user profile data to get the username
     fetch('/api/profile', {
-      method: 'POST', // Correct method
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, // Include token
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        username: localStorage.getItem('username'), // Assuming the username is stored
+        username: localStorage.getItem('username'),
       }),
     })
       .then((response) => {
@@ -44,7 +51,7 @@ function MainPage() {
       })
       .then((data) => {
         if (data.username) {
-          setUsername(data.username); // Set the username
+          setUsername(data.username);
         } else {
           throw new Error('Username not found in response');
         }
@@ -58,31 +65,37 @@ function MainPage() {
     const fetchAllSportsData = async () => {
       try {
         const endpoints = [
-          '/api/games/nfl-games',
-          '/api/games/nba-games',
-          '/api/games/nlb-games',
-          '/api/games/nhl-games',
-          '/api/games/soc-games',
+          { url: '/api/games/nfl-games', sport: 'NFL' },
+          { url: '/api/games/nba-games', sport: 'NBA' },
+          { url: '/api/games/nlb-games', sport: 'MLB' },
+          { url: '/api/games/nhl-games', sport: 'NHL' },
+          { url: '/api/games/soc-games', sport: 'Soccer' },
         ];
         const results = await Promise.all(
           endpoints.map((endpoint) =>
-            fetch(endpoint, {
+            fetch(endpoint.url, {
               method: 'GET',
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }).then((response) => {
               if (!response.ok) {
-                throw new Error(`Failed to fetch data from ${endpoint}`);
+                throw new Error(`Failed to fetch data from ${endpoint.url}`);
               }
-              return response.json();
+              return response.json().then((data) => ({
+                sport: endpoint.sport,
+                games: data,
+              }));
             })
           )
         );
 
-        // Combine all the games into one array
-        const combinedGames = results.flat();
+        // Combine all the games into one array with sport labels
+        const combinedGames = results.flatMap(({ sport, games }) =>
+          games.map((game) => ({ ...game, sport }))
+        );
         setGames(combinedGames); // Set the game data for all sports
+        setFilteredGames(combinedGames); // Initially show all games
       } catch (err) {
         console.error(err.message);
         setError('Failed to fetch game data for all sports');
@@ -92,9 +105,22 @@ function MainPage() {
     fetchAllSportsData();
   }, [navigate]);
 
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = (sport) => {
+    setAnchorEl(null);
+    if (sport === 'All') {
+      setFilteredGames(games); // Show all games
+    } else {
+      setFilteredGames(games.filter((game) => game.sport === sport)); // Filter by selected sport
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Clear the token from localStorage
-    navigate('/login'); // Redirect to the login page
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
   if (error) {
@@ -109,6 +135,24 @@ function MainPage() {
           <Typography variant="h6" style={{ flexGrow: 1 }}>
             {username ? `Hello, ${username}` : 'Loading...'}
           </Typography>
+          <Button
+            color="inherit"
+            onClick={handleMenuClick}
+          >
+            Filter Games
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={() => handleMenuClose('All')}
+          >
+            <MenuItem onClick={() => handleMenuClose('All')}>All Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose('NFL')}>NFL Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose('NBA')}>NBA Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose('MLB')}>MLB Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose('NHL')}>NHL Games</MenuItem>
+            <MenuItem onClick={() => handleMenuClose('Soccer')}>Soccer Games</MenuItem>
+          </Menu>
           <Button color="inherit" onClick={() => navigate('/profile')}>
             Profile
           </Button>
@@ -118,13 +162,13 @@ function MainPage() {
         </Toolbar>
       </AppBar>
 
-      {/* Display Games for All Sports */}
+      {/* Display Games for Selected Sport */}
       <Box p={3}>
         <Typography variant="h5" gutterBottom>
-          Upcoming Games
+          {filteredGames.length > 0 ? `Upcoming Games` : 'No Games Available'}
         </Typography>
         <Grid container spacing={2}>
-          {games.map((game, index) => (
+          {filteredGames.map((game, index) => (
             <Grid item xs={12} key={index}>
               <Paper
                 elevation={3}
@@ -132,6 +176,7 @@ function MainPage() {
                   padding: '10px',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}
               >
                 {/* Home Team */}
@@ -141,30 +186,23 @@ function MainPage() {
                     alt={game.teams[0]?.name}
                     style={{ marginRight: '10px', width: '40px', height: '40px' }}
                   />
-                  <Typography variant="h6">
-                    {game.teams[0]?.displayName}
-                  </Typography>
+                  <Typography variant="h6">{game.teams[0]?.displayName}</Typography>
                 </Box>
 
                 {/* Match Time */}
                 <Box textAlign="center" flex={1}>
-                  <Typography variant="h6">{game.status?.shortDetail}</Typography>
+                  <Typography variant="h6">{game.status?.shortDetail || 'Time TBD'}</Typography>
                 </Box>
 
                 {/* Away Team */}
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  flex={1}
-                  justifyContent="flex-end"
-                >
+                <Box display="flex" alignItems="center" flex={1} justifyContent="flex-end">
                   <Typography variant="h6" style={{ marginRight: '10px' }}>
                     {game.teams[1]?.displayName}
                   </Typography>
                   <Avatar
                     src={game.teams[1]?.logo}
                     alt={game.teams[1]?.name}
-                    style={{ marginLeft: '10px', width: '40px', height: '40px' }}
+                    style={{ width: '40px', height: '40px' }}
                   />
                 </Box>
               </Paper>
