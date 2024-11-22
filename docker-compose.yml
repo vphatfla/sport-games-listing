@@ -1,0 +1,22 @@
+services:
+  database:
+    build:
+      context: ./database
+    ports:
+      - "27017:27017"
+    volumes:
+      - dbdata:/data/db
+    restart: always
+
+  backend:
+    build:
+      context: ./back-end
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    restart: always
+
+volumes:
+  dbdata:
+    
