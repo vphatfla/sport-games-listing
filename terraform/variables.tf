@@ -1,11 +1,11 @@
 variable "region" {
-  description = "AWS region to deploy the app"
+  description = "AWS region for deployment"
   type        = string
   default     = "us-east-2"
 }
 
 variable "cluster_id" {
-  description = "ECS cluster ID for backend and database"
+  description = "ECS cluster ID"
   type        = string
 }
 
@@ -15,7 +15,7 @@ variable "subnet_ids" {
 }
 
 variable "vpc_id" {
-  description = "VPC ID where the resources will be deployed"
+  description = "VPC ID for the deployment"
   type        = string
 }
 
@@ -27,26 +27,17 @@ variable "backend_image" {
 variable "frontend_bucket_name" {
   description = "Name of the S3 bucket for the frontend"
   type        = string
-  default     = "sport-listing-frontend-bucket"
+  default     = "contactmanagerteamone-frontend"
 }
 
-variable "database_image" {
-  description = "Docker image URL for the database"
+variable "domain_name" {
+  description = "Domain name for the app"
   type        = string
+  default     = "contactmanagerteamone.one"
 }
 
 variable "backend_security_group" {
   description = "Security group ID for backend ECS tasks"
-  type        = string
-}
-
-variable "database_security_group" {
-  description = "Security group ID for database ECS tasks"
-  type        = string
-}
-
-variable "backend_target_group_name" {
-  description = "Name of the backend target group for ALB"
   type        = string
 }
 
@@ -56,3 +47,8 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "route53_host_zone_id" {
+    description = "Host zone for contactmanagerteamone.one"
+    type = string
+    default = "Z10156963314SAUFOJNPS"
+}

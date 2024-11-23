@@ -23,7 +23,7 @@ resource "aws_ecs_service" "backend_service" {
   desired_count   = 1
 
   capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
+    capacity_provider = "FARGATE"
     weight            = 1
   }
 
@@ -31,5 +31,9 @@ resource "aws_ecs_service" "backend_service" {
     subnets         = var.subnet_ids
     security_groups = [var.backend_security_group]
   }
+}
+
+output "target_group_arn" {
+  value = aws_lb_target_group.backend_tg.arn
 }
 
