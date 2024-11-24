@@ -1,6 +1,6 @@
-resource "aws_security_group" "alb" {
-  name   = "${var.project_name}-alb-sg"
-  vpc_id = var.vpc_id
+resource "aws_security_group" "ecs" {
+  vpc_id = aws_vpc.main.id
+  tags   = merge(var.tags, { Name = "ecs-sg" })
 
   ingress {
     from_port   = 80
@@ -17,15 +17,15 @@ resource "aws_security_group" "alb" {
   }
 }
 
-resource "aws_security_group" "ecs_task" {
-  name   = "${var.project_name}-ecs-task-sg"
-  vpc_id = var.vpc_id
+resource "aws_security_group" "database" {
+  vpc_id = aws_vpc.main.id
+  tags   = merge(var.tags, { Name = "database-sg" })
 
   ingress {
-    from_port   = 3000
-    to_port     = 3000
+    from_port   = 5432
+    to_port     = 5432
     protocol    = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    security_groups = [aws_security_group.ecs.id]
   }
 
   egress {
