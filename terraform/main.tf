@@ -12,6 +12,8 @@ resource "aws_instance" "sport_listing_instance" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
 
+  vpc_security_group_ids = [aws_security_group.sport_listing_sg.id] # Attach the SG
+
   tags = {
     Name = var.instance_name
   }
@@ -34,6 +36,50 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical's AWS account ID for Ubuntu
 }
+
+resource "aws_security_group" "sport_listing_sg" {
+  name        = "sport-listing-sg"
+  description = "Allow SSH, HTTP, and HTTPS traffic"
+
+  # Ingress Rules (Allow inbound traffic)
+  ingress {
+    description = "Allow SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Public access
+  }
+
+  ingress {
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Public access
+  }
+
+  ingress {
+    description = "Allow HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Public access
+  }
+
+  # Egress Rules (Allow all outbound traffic)
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"] # Public access
+  }
+
+  tags = {
+    Name = "SportListingSG"
+  }
+}
+
 
 # outputs.tf
 output "instance_public_ip" {
