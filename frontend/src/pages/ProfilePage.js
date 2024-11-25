@@ -13,6 +13,8 @@ import {
   Alert,
 } from "@mui/material";
 
+const server_url = require('../config');
+
 function ProfilePage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -35,7 +37,7 @@ function ProfilePage() {
       return;
     }
 
-    fetch("/api/profile", {
+    fetch(server_url() + "/api/profile", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +92,7 @@ function ProfilePage() {
       return;
     }
   
-    fetch("/api/profile/setting", {
+    fetch(server_url() + "/api/profile/setting", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
