@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
+const server_url = require('./config');
+
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -12,7 +14,7 @@ function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(server_url + '/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +47,7 @@ function LoginPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(server_url + '/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
