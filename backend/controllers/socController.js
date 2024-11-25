@@ -26,7 +26,7 @@ const processData = (events) => {
                 'color': team['team']['color'],
                 'alternateColor': team['team']['alternateColor'],
                 'logo': team['team']['logo'],
-                'score': team['team']['score']
+                'score': team['score']
             }
         })
         return {
