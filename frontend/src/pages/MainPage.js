@@ -13,7 +13,7 @@ import {
   MenuItem,
 } from "@mui/material";
 
-const server_url = require('./config');
+const server_url = require('../config');
 
 function MainPage() {
   const navigate = useNavigate();
@@ -41,11 +41,11 @@ function MainPage() {
     const fetchAllSportsData = async () => {
       try {
         const endpoints = [
-          { url: server_url + "/api/games/nfl-games", sport: "NFL" },
-          { url: server_url + "/api/games/nba-games", sport: "NBA" },
-          { url: server_url + "/api/games/nlb-games", sport: "MLB" },
-          { url: server_url + "/api/games/nhl-games", sport: "NHL" },
-          { url: server_url + "/api/games/soc-games", sport: "Soccer" },
+          { url: server_url() + "/api/games/nfl-games", sport: "NFL" },
+          { url: server_url() + "/api/games/nba-games", sport: "NBA" },
+          { url: server_url() + "/api/games/nlb-games", sport: "MLB" },
+          { url: server_url() + "/api/games/nhl-games", sport: "NHL" },
+          { url: server_url() + "/api/games/soc-games", sport: "Soccer" },
         ];
         const results = await Promise.all(
           endpoints.map((endpoint) =>
