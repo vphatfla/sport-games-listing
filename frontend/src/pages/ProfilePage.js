@@ -59,6 +59,7 @@ function ProfilePage() {
         setFavoriteSports(serverSports);
 
         // Save to local storage for persistence
+        localStorage.setItem("name", data.name)
         localStorage.setItem("favoriteSports", JSON.stringify(serverSports));
       })
       .catch((err) => {
@@ -116,7 +117,7 @@ function ProfilePage() {
         setSnackbarOpen(true);
   
         // Update the localStorage with the new name
-        localStorage.setItem("username", name);
+        localStorage.setItem("name", name);
   
         // Save favorite sports to local storage
         localStorage.setItem("favoriteSports", JSON.stringify(favoriteSports));

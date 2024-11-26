@@ -125,7 +125,7 @@ function MainPage() {
       <AppBar position="static" style={{ marginBottom: "20px" }}>
         <Toolbar>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            {username ? `Hello, ${username}` : "Loading..."}
+            {username ? `Hello, ${ (localStorage.getItem('name') ? localStorage.getItem('name') : username)}` : "Loading..."}
           </Typography>
           <Button color="inherit" onClick={handleMenuClick}>
             Filter Games
