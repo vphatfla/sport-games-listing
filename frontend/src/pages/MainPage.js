@@ -13,7 +13,7 @@ import {
   MenuItem,
 } from "@mui/material";
 
-const server_url = require('../config');
+const server_url = require("../config");
 
 function MainPage() {
   const navigate = useNavigate();
@@ -125,7 +125,7 @@ function MainPage() {
       <AppBar position="static" style={{ marginBottom: "20px" }}>
         <Toolbar>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            {username ? `Hello, ${username}` : "Loading..."}
+            {username ? `Hello, ${ (localStorage.getItem('name') ? localStorage.getItem('name') : username)}` : "Loading..."}
           </Typography>
           <Button color="inherit" onClick={handleMenuClick}>
             Filter Games
@@ -178,9 +178,17 @@ function MainPage() {
                   <Typography variant="h6">{game.teams[0]?.displayName}</Typography>
                 </Box>
 
-                {/* Match Time */}
+                {/* Match Status or Time */}
                 <Box textAlign="center" flex={1}>
-                  <Typography variant="h6">{game.status?.shortDetail || "Time TBD"}</Typography>
+                  {game.status?.type === "STATUS_SCHEDULED" ? (
+                    <Typography variant="h6">
+                      {game.status?.shortDetail || "Scheduled"}
+                    </Typography>
+                  ) : (
+                    <Typography variant="h6">
+                      {game.teams[0]?.score} - {game.teams[1]?.score}
+                    </Typography>
+                  )}
                 </Box>
 
                 {/* Away Team */}
