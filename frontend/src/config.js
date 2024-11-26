@@ -1,5 +1,5 @@
 const server_url = () => {
-    let server_url = 'https://contactmanagerteamone.one';
+    let server_url = 'http://localhost:3001';
     console.log(server_url)
     if (server_url === undefined || server_url === null || server_url === '') {
         server_url = 'http://localhost:3000'
