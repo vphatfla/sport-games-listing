@@ -1,22 +1,41 @@
+networks:
+  app-network:
+    driver: bridge
+
 services:
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    environment:
+      SERVER_URL: https://contactmanagerteamone.one
+    
   database:
     build:
       context: ./database
-    ports:
-      - "27017:27017"
     volumes:
       - dbdata:/data/db
     restart: unless-stopped
+    networks:
+      - app-network 
 
   backend:
-    build:za
+    build:
       context: ./back-end
     ports:
       - "3000:3000"
+    environment:
+      DB_HOST: mongodb://database:27017/app_db  
     depends_on:
       - database
     restart: unless-stopped
-
+    networks:
+      - app-network  
+      
 volumes:
   dbdata:
-    
+
+
